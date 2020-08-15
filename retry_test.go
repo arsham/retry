@@ -64,6 +64,14 @@ func testLoopDoZero(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.Zero(t, calls, "expected zero calls")
+
+	l.Attempts = 10
+	err = l.Do(func() error {
+		calls++
+		return nil
+	})
+	assert.NoError(t, err)
+	assert.Equal(t, calls, 1, "expected 1 call")
 }
 
 func testLoopDoStopping(t *testing.T) {
@@ -175,10 +183,9 @@ func testLoopDoSleepIncrementalMethodOverSecond(t *testing.T) {
 	if testing.Short() {
 		t.Skip("slow test")
 	}
-	delay := 1100 * time.Millisecond
 	l := &retry.Retry{
 		Attempts: 2,
-		Delay:    delay,
+		Delay:    10 * time.Second,
 		Method:   retry.IncrementalDelay,
 	}
 
@@ -191,11 +198,11 @@ func testLoopDoSleepIncrementalMethodOverSecond(t *testing.T) {
 	finished := time.Now()
 	assert.Equal(t, assert.AnError, errors.Cause(err))
 
-	expected := started.Add(delay).Add(delay * 2)
+	expected := started.Add(3 * time.Second)
 	assert.True(t, finished.After(expected),
 		fmt.Sprintf("wanted to take more than %s, took %s", expected.Sub(started), finished.Sub(started)),
 	)
-	assert.True(t, finished.Before(expected.Add(2*delay)),
-		fmt.Sprintf("take (%s) more than expected: %s", finished.Sub(started), expected.Add(2*delay)),
+	assert.True(t, finished.Before(expected.Add(2*time.Second)),
+		fmt.Sprintf("take (%s) more than expected: %s", finished.Sub(started), 4*time.Second),
 	)
 }

@@ -1,3 +1,12 @@
+// Package retry invokes a given function until it succeeds. It sleeps in
+// between attempts based the DelayMethod. It is useful in situations that an
+// action might succeed after a few attempt due to unavailable resources or
+// waiting for a condition to happen.
+//
+// The default DelayMethod sleeps exactly the same amount of time between
+// attempts. You can use the IncrementalDelay method to increment the delays
+// between attempts. It gives a gitter to the delay to prevent Thundering herd
+// problems.
 package retry
 
 import (
@@ -14,26 +23,28 @@ func init() {
 // on each iteration, with the delay value of the Retry object.
 type DelayMethod func(attempt int, delay time.Duration) time.Duration
 
-// StopError causes the Do method stop trying and will return the Err.
+// StopError causes the Do method stop trying and will return the Err. This
+// error then is returned by the Do method.
 type StopError struct {
 	Err error
 }
 
 func (s StopError) Error() string { return s.Err.Error() }
 
-// Retry implements a Do method that would call a given function Attempts times
-// until it returns nil. It will delay between calls for any errors based on the
-// provided Method. Retry is concurrent safe. The zero value does not do
-// anything.
+// Retry attempts to call a given function until it succeeds, or returns a
+// StopError value for a certain amount of times. It will delay between calls
+// for any errors based on the provided Method. Retry is concurrent safe and
+// the zero value does not do anything.
 type Retry struct {
 	Attempts int
 	Delay    time.Duration
 	Method   DelayMethod
 }
 
-// Do calls fn for Attempts times until it returns nil or a StopError. If
-// retries is 0 fn would not be called. It delays and retries if the fn returns
-// any errors or panics.
+// Do calls fn until it returns nil or a StopError. It delays and retries if the
+// fn returns any errors or panics. The value fo the returned error, or the Err
+// of a StopError, or an error with the panic message will be returned at the
+// last cycle.
 func (r Retry) Do(fn func() error) error {
 	method := r.Method
 	if method == nil {
@@ -43,8 +54,8 @@ func (r Retry) Do(fn func() error) error {
 	for i := 0; i < r.Attempts; i++ {
 		func() {
 			defer func() {
-				if r := recover(); r != nil {
-					err = fmt.Errorf("function caused a panic: %v", r)
+				if e := recover(); e != nil {
+					err = fmt.Errorf("function caused a panic: %v", e)
 				}
 			}()
 			err = fn()
@@ -63,13 +74,14 @@ func (r Retry) Do(fn func() error) error {
 // StandardDelay always delays the same amount of time.
 func StandardDelay(_ int, delay time.Duration) time.Duration { return delay }
 
-// IncrementalDelay increases the delay between attempts. It adds a jitter to
-// prevent Thundering herd.
+// IncrementalDelay increases the delay between attempts up to a second. It adds
+// a jitter to prevent Thundering herd.
 func IncrementalDelay(attempt int, delay time.Duration) time.Duration {
-	d := int64(delay)
-	if d > 1000000000 { // a second
-		d = 1000000000
+	if delay > time.Second {
+		delay = time.Second
 	}
+	d := int64(delay)
+	// nolint:gosec // the rand package is used for fast ransom number generation.
 	jitter := rand.Int63n(d) / 2
 	return (delay * time.Duration(attempt)) + time.Duration(jitter)
 }

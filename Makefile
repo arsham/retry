@@ -18,9 +18,17 @@ unittest: ## Run unit tests in watch mode. You can set: [run, timeout, short, di
 .PHONY: dependencies
 dependencies: ## Install dependencies requried for development operations.
 	@go get -u github.com/cespare/reflex
-	@go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.28.3
+	@go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.30.0
 	@go get -u github.com/git-chglog/git-chglog/cmd/git-chglog
 	@go mod tidy
+
+
+.PHONY: ci_tests
+ci_tests: ## Run tests for CI.
+	go fmt ./...
+	go vet ./...
+	golangci-lint run ./...
+	go test -trimpath --timeout=10m -failfast -v -race -covermode=atomic -coverprofile=coverage.out ./...
 
 
 .PHONY: changelog
@@ -39,3 +47,11 @@ changelog_release: ## Update the changelog with a release tag.
 clean: ## Clean test caches and tidy up modules.
 	@go clean -testcache
 	@go mod tidy
+
+
+
+.PHONY: coverage
+coverage: ## Show the test coverage on browser.
+	go test -covermode=count -coverprofile=coverage.out ./...
+	go tool cover -func=coverage.out | tail -n 1
+	go tool cover -html=coverage.out
