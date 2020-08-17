@@ -146,6 +146,7 @@ func testLoopDoSleepStandardMethod(t *testing.T) {
 func testLoopDoSleepIncrementalMethod(t *testing.T) {
 	t.Run("UnderSecond", testLoopDoSleepIncrementalMethodUnderSecond)
 	t.Run("OverSecond", testLoopDoSleepIncrementalMethodOverSecond)
+	t.Run("Zero", testLoopDoSleepIncrementalMethodZero)
 }
 
 func testLoopDoSleepIncrementalMethodUnderSecond(t *testing.T) {
@@ -196,13 +197,38 @@ func testLoopDoSleepIncrementalMethodOverSecond(t *testing.T) {
 		return assert.AnError
 	})
 	finished := time.Now()
-	assert.Equal(t, assert.AnError, errors.Cause(err))
-
 	expected := started.Add(3 * time.Second)
+
+	assert.Equal(t, assert.AnError, errors.Cause(err))
+	assert.Equal(t, l.Attempts, count)
+
 	assert.True(t, finished.After(expected),
 		fmt.Sprintf("wanted to take more than %s, took %s", expected.Sub(started), finished.Sub(started)),
 	)
 	assert.True(t, finished.Before(expected.Add(2*time.Second)),
 		fmt.Sprintf("take (%s) more than expected: %s", finished.Sub(started), 4*time.Second),
+	)
+}
+
+func testLoopDoSleepIncrementalMethodZero(t *testing.T) {
+	t.Parallel()
+	l := &retry.Retry{
+		Attempts: 50,
+		Method:   retry.IncrementalDelay,
+	}
+
+	count := 0
+	started := time.Now()
+	err := l.Do(func() error {
+		count++
+		return assert.AnError
+	})
+	finished := time.Now()
+	assert.Equal(t, assert.AnError, errors.Cause(err))
+	assert.Equal(t, l.Attempts, count)
+
+	expected := started.Add(time.Second)
+	assert.True(t, finished.Before(expected),
+		fmt.Sprintf("take (%s) more than expected: %s", finished.Sub(started), time.Second),
 	)
 }

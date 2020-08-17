@@ -5,8 +5,9 @@
 //
 // The default DelayMethod sleeps exactly the same amount of time between
 // attempts. You can use the IncrementalDelay method to increment the delays
-// between attempts. It gives a gitter to the delay to prevent Thundering herd
-// problems.
+// between attempts. It gives a jitter to the delay to prevent Thundering herd
+// problems. If the delay is 0 in either case, it does not sleep between
+// tries.
 package retry
 
 import (
@@ -75,8 +76,11 @@ func (r Retry) Do(fn func() error) error {
 func StandardDelay(_ int, delay time.Duration) time.Duration { return delay }
 
 // IncrementalDelay increases the delay between attempts up to a second. It adds
-// a jitter to prevent Thundering herd.
+// a jitter to prevent Thundering herd. If the delay is 0, it always returns 0.
 func IncrementalDelay(attempt int, delay time.Duration) time.Duration {
+	if delay == 0 {
+		return 0
+	}
 	if delay > time.Second {
 		delay = time.Second
 	}
