@@ -7,7 +7,7 @@
 [![Coverage Status](https://codecov.io/gh/arsham/retry/branch/master/graph/badge.svg)](https://codecov.io/gh/arsham/retry)
 [![Go Report Card](https://goreportcard.com/badge/github.com/arsham/retry)](https://goreportcard.com/report/github.com/arsham/retry)
 
-This library supports `Go >= 1.13`.
+This library supports `Go >= 1.15`.
 
 `Retry` calls your function, and if it errors it calls it again with a delay.
 Eventually it returns the last error or nil if one call is successful.

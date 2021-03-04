@@ -18,7 +18,7 @@ unittest: ## Run unit tests in watch mode. You can set: [run, timeout, short, di
 .PHONY: dependencies
 dependencies: ## Install dependencies requried for development operations.
 	@go get -u github.com/cespare/reflex
-	@go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.30.0
+	@go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.37.1
 	@go get -u github.com/git-chglog/git-chglog/cmd/git-chglog
 	@go mod tidy
 
@@ -47,7 +47,6 @@ changelog_release: ## Update the changelog with a release tag.
 clean: ## Clean test caches and tidy up modules.
 	@go clean -testcache
 	@go mod tidy
-
 
 
 .PHONY: coverage

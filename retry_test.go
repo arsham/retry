@@ -11,6 +11,7 @@ import (
 )
 
 func TestLoopDo(t *testing.T) {
+	t.Parallel()
 	t.Run("Return", testLoopDoReturn)
 	t.Run("Zero", testLoopDoZero)
 	t.Run("Stopping", testLoopDoStopping)
@@ -75,6 +76,11 @@ func testLoopDoZero(t *testing.T) {
 }
 
 func testLoopDoStopping(t *testing.T) {
+	t.Run("WithValue", testLoopDoStoppingValue)
+	t.Run("WithPointer", testLoopDoStoppingPointer)
+}
+
+func testLoopDoStoppingValue(t *testing.T) {
 	t.Parallel()
 	l := &retry.Retry{
 		Attempts: 10,
@@ -85,6 +91,24 @@ func testLoopDoStopping(t *testing.T) {
 		calls++
 		if calls >= 4 {
 			return retry.StopError{Err: wantErr}
+		}
+		return assert.AnError
+	})
+	assert.Equal(t, 4, calls)
+	assert.Equal(t, err, wantErr)
+}
+
+func testLoopDoStoppingPointer(t *testing.T) {
+	t.Parallel()
+	l := &retry.Retry{
+		Attempts: 10,
+	}
+	calls := 0
+	wantErr := errors.New("stop error")
+	err := l.Do(func() error {
+		calls++
+		if calls >= 4 {
+			return &retry.StopError{Err: wantErr}
 		}
 		return assert.AnError
 	})

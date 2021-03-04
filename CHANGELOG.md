@@ -5,6 +5,16 @@
 
 
 
+<a name="v0.2.0"></a>
+## [v0.2.0] - 2021-03-04
+
+### Added
+- Add support for stopping by error pointer
+
+### Fixed
+- Fix travis-ci badge link
+
+
 <a name="v0.1.2"></a>
 ## [v0.1.2] - 2020-08-17
 
@@ -27,6 +37,7 @@
 
 
 
-[Unreleased]: https://github.com/arsham/retry/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/arsham/retry/compare/v0.2.0...HEAD
+[v0.2.0]: https://github.com/arsham/retry/compare/v0.1.2...v0.2.0
 [v0.1.2]: https://github.com/arsham/retry/compare/v0.1.1...v0.1.2
 [v0.1.1]: https://github.com/arsham/retry/compare/v0.1.0...v0.1.1

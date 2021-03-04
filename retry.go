@@ -11,6 +11,7 @@
 package retry
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"time"
@@ -64,8 +65,15 @@ func (r Retry) Do(fn func() error) error {
 		if err == nil {
 			return nil
 		}
-		if v, ok := err.(StopError); ok {
-			return v.Err
+		var (
+			v1 StopError
+			v2 *StopError
+		)
+		if errors.As(err, &v1) {
+			return v1.Err
+		}
+		if errors.As(err, &v2) {
+			return v2.Err
 		}
 		time.Sleep(method(i+1, r.Delay))
 	}
