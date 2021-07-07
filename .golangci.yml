@@ -8,8 +8,8 @@ linters-settings:
             - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
             - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
             - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
-    golint:
-      min-confidence: 0
+      enable:
+        - fieldalignment
     gocyclo:
       min-complexity: 15
     maligned:
@@ -30,13 +30,13 @@ linters-settings:
         - opinionated
         - performance
         - style
-      disabled-checks:
-        - wrapperFunc
-        - dupImport # https://github.com/go-critic/go-critic/issues/845
     funlen:
       lines: 100
       statements: 50
-
+    godot:
+      capital: true
+    unparam:
+      check-exported: true
 
 issues:
   # Excluding configuration per-path, per-linter, per-text and per-source
@@ -45,6 +45,8 @@ issues:
       linters:
         - gosec # security check is not impoerant in tests
         - dupl  # we usualy duplicate code in tests
+  fix: true
+  exclude-use-default: false
 
 run:
   skip-dirs:
@@ -61,12 +63,16 @@ linters:
   disable-all: true
   fast: true
   enable:
-    - asciicheck
     - bodyclose
-    - dogsled
+    - deadcode
     - depguard
+    - dogsled
     - dupl
+    - durationcheck
+    - errcheck
     - errorlint
+    - exportloopref
+    - forcetypeassert
     - gocognit
     - goconst
     - gocritic
@@ -77,27 +83,30 @@ linters:
     - goprintffuncname
     - gosec
     - gosimple
-    - interfacer
-    - maligned
+    - govet
+    - ineffassign
     - misspell
     - nakedret
     - nestif
+    - nilerr
     - prealloc
     - rowserrcheck
-    - scopelint
+    - sqlclosecheck
     - staticcheck
+    - structcheck
     - stylecheck
+    - tparallel
+    - typecheck
     - unconvert
     - unparam
     - unused
+    - varcheck
+    - wastedassign
     - whitespace
-    - wrapcheck
-    - tparallel
-
 
 # golangci.com configuration
 # https://github.com/golangci/golangci/wiki/Configuration
 service:
-  golangci-lint-version: 1.37.x
+  golangci-lint-version: 1.40.x
   prepare:
     - echo "here I can run custom commands, but no preparation needed for this repo"
