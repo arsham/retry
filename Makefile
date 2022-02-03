@@ -7,13 +7,11 @@ short="-short"
 flags=""
 timeout=40s
 
-
 .PHONY: unittest
 unittest: ## Run unit tests in watch mode. You can set: [run, timeout, short, dir, flags]. Example: make unittest flags="-race".
 	@echo "running tests on $(run). waiting for changes..."
 	@-zsh -c "go test -trimpath --timeout=$(timeout) $(short) $(dir) -run $(run) $(flags); repeat 100 printf '#'; echo"
 	@reflex -d none -r "(\.go$$)|(go.mod)" -- zsh -c "go test -trimpath --timeout=$(timeout) $(short) $(dir) -run $(run) $(flags); repeat 100 printf '#'"
-
 
 .PHONY: dependencies
 dependencies: ## Install dependencies requried for development operations.
@@ -23,7 +21,6 @@ dependencies: ## Install dependencies requried for development operations.
 	@go get -u ./...
 	@go mod tidy
 
-
 .PHONY: ci_tests
 ci_tests: ## Run tests for CI.
 	go fmt ./...
@@ -31,24 +28,10 @@ ci_tests: ## Run tests for CI.
 	golangci-lint run ./...
 	go test -trimpath --timeout=10m -failfast -v -race -covermode=atomic -coverprofile=coverage.out ./...
 
-
-.PHONY: changelog
-changelog: ## Update the changelog.
-	@git-chglog > CHANGELOG.md
-	@echo "Changelog has been updated."
-
-
-.PHONY: changelog_release
-changelog_release: ## Update the changelog with a release tag.
-	@git-chglog --next-tag $(tag) > CHANGELOG.md
-	@echo "Changelog has been updated."
-
-
 .PHONY: clean
 clean: ## Clean test caches and tidy up modules.
 	@go clean -testcache
 	@go mod tidy
-
 
 .PHONY: coverage
 coverage: ## Show the test coverage on browser.
