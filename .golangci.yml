@@ -1,50 +1,50 @@
 linters-settings:
-    govet:
-      check-shadowing: true
-      settings:
-        printf:
-          funcs:
-            - (github.com/golangci/golangci-lint/pkg/logutils.Log).Infof
-            - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
-            - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
-            - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
-      enable:
-        - fieldalignment
-    gocyclo:
-      min-complexity: 15
-    maligned:
-      suggest-new: true
-    goconst:
-      min-len: 2
-      min-occurrences: 2
-    misspell:
-      locale: UK
-    lll:
-      line-length: 140
-    goimports:
-      local-prefixes: github.com/golangci/golangci-lint
-    gocritic:
-      enabled-tags:
-        - diagnostic
-        - experimental
-        - opinionated
-        - performance
-        - style
-    funlen:
-      lines: 100
-      statements: 50
-    godot:
-      capital: true
-    unparam:
-      check-exported: true
+  govet:
+    check-shadowing: true
+    settings:
+      printf:
+        funcs:
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Infof
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
+    enable:
+      - fieldalignment
+  gocyclo:
+    min-complexity: 15
+  maligned:
+    suggest-new: true
+  goconst:
+    min-len: 2
+    min-occurrences: 2
+  misspell:
+    locale: UK
+  lll:
+    line-length: 140
+  goimports:
+    local-prefixes: github.com/golangci/golangci-lint
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+  funlen:
+    lines: 100
+    statements: 50
+  godot:
+    capital: true
+  unparam:
+    check-exported: true
 
 issues:
   # Excluding configuration per-path, per-linter, per-text and per-source
   exclude-rules:
     - path: _test\.go
       linters:
-        - gosec # security check is not impoerant in tests
-        - dupl  # we usualy duplicate code in tests
+        - gosec # security check is not important in tests
+        - dupl # we usualy duplicate code in tests
   fix: true
   exclude-use-default: false
 
@@ -79,7 +79,6 @@ linters:
     - gocyclo
     - godot
     - godox
-    - golint
     - goprintffuncname
     - gosec
     - gosimple
@@ -90,6 +89,7 @@ linters:
     - nestif
     - nilerr
     - prealloc
+    - revive
     - rowserrcheck
     - sqlclosecheck
     - staticcheck
@@ -107,6 +107,6 @@ linters:
 # golangci.com configuration
 # https://github.com/golangci/golangci/wiki/Configuration
 service:
-  golangci-lint-version: 1.40.x
+  golangci-lint-version: 1.44.x
   prepare:
     - echo "here I can run custom commands, but no preparation needed for this repo"
