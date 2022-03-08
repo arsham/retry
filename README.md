@@ -23,6 +23,16 @@ err := l.Do(func() error {
 })
 ```
 
+You can provide multiple functions:
+
+```go
+err := l.Do(func() error {
+    return nil
+}, func() error {
+    return nil
+}}
+```
+
 If you want to stop retrying you can return a special error:
 
 ```go

@@ -42,25 +42,20 @@ type Retry struct {
 	Attempts int
 }
 
+type repeatFunc func() error
+
 // Do calls fn until it returns nil or a StopError. It delays and retries if
 // the fn returns any errors or panics. The value fo the returned error, or the
 // Err of a StopError, or an error with the panic message will be returned at
 // the last cycle.
-func (r Retry) Do(fn func() error) error {
+func (r Retry) Do(fn1 repeatFunc, fns ...repeatFunc) error {
 	method := r.Method
 	if method == nil {
 		method = StandardDelay
 	}
 	var err error
 	for i := 0; i < r.Attempts; i++ {
-		func() {
-			defer func() {
-				if e := recover(); e != nil {
-					err = fmt.Errorf("function caused a panic: %v", e)
-				}
-			}()
-			err = fn()
-		}()
+		err = r.do(fn1, fns...)
 		if err == nil {
 			return nil
 		}
@@ -77,6 +72,24 @@ func (r Retry) Do(fn func() error) error {
 		time.Sleep(method(i+1, r.Delay))
 	}
 	return err
+}
+
+func (r Retry) do(fn1 repeatFunc, fns ...repeatFunc) error {
+	var err error
+	for _, fn := range append([]repeatFunc{fn1}, fns...) {
+		func() {
+			defer func() {
+				if e := recover(); e != nil {
+					err = fmt.Errorf("function caused a panic: %v", e)
+				}
+			}()
+			err = fn()
+		}()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // StandardDelay always delays the same amount of time.

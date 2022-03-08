@@ -136,3 +136,27 @@ func ExampleIncrementalDelay() {
 	// Output:
 	// Error: <nil>
 }
+
+func ExampleRetry_Do_multipleFuncs() {
+	l := &retry.Retry{
+		Attempts: 4,
+		Delay:    time.Nanosecond,
+	}
+	err := l.Do(func() error {
+		fmt.Println("Running func 1.")
+		return nil
+	}, func() error {
+		fmt.Println("Running func 2.")
+		return nil
+	}, func() error {
+		fmt.Println("Running func 3.")
+		return nil
+	})
+	fmt.Println("Error:", err)
+
+	// Output:
+	// Running func 1.
+	// Running func 2.
+	// Running func 3.
+	// Error: <nil>
+}

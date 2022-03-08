@@ -17,6 +17,7 @@ func TestLoopDo(t *testing.T) {
 	t.Run("Stopping", testLoopDoStopping)
 	t.Run("Panic", testLoopDoPanic)
 	t.Run("Sleep", testLoopDoSleep)
+	t.Run("MultiFunc", testLoopDoMultiFunc)
 }
 
 func testLoopDoReturn(t *testing.T) {
@@ -255,4 +256,60 @@ func testLoopDoSleepIncrementalMethodZero(t *testing.T) {
 	assert.True(t, finished.Before(expected),
 		fmt.Sprintf("take (%s) more than expected: %s", finished.Sub(started), time.Second),
 	)
+}
+
+func testLoopDoMultiFunc(t *testing.T) {
+	t.Parallel()
+	t.Run("FirstErrors", testLoopDoMultiFuncFirstErrors)
+	t.Run("SecondErrors", testLoopDoMultiFuncSecondErrors)
+	t.Run("NoErrors", testLoopDoMultiFuncNoErrors)
+}
+
+func testLoopDoMultiFuncFirstErrors(t *testing.T) {
+	t.Parallel()
+	l := &retry.Retry{
+		Attempts: 3,
+	}
+	err := l.Do(func() error {
+		return assert.AnError
+	}, func() error {
+		t.Error("should not be called")
+		return nil
+	})
+	assert.Equal(t, assert.AnError, errors.Cause(err))
+}
+
+func testLoopDoMultiFuncSecondErrors(t *testing.T) {
+	t.Parallel()
+	l := &retry.Retry{
+		Attempts: 3,
+	}
+
+	calls := 0
+	err := l.Do(func() error {
+		calls++
+		return nil
+	}, func() error {
+		return assert.AnError
+	})
+	assert.Equal(t, assert.AnError, errors.Cause(err))
+	assert.Equal(t, 3, calls)
+}
+
+func testLoopDoMultiFuncNoErrors(t *testing.T) {
+	t.Parallel()
+	l := &retry.Retry{
+		Attempts: 3,
+	}
+
+	calls := 0
+	err := l.Do(func() error {
+		calls++
+		return nil
+	}, func() error {
+		calls++
+		return nil
+	})
+	assert.NoError(t, err)
+	assert.Equal(t, 2, calls)
 }
