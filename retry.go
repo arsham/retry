@@ -32,6 +32,8 @@ type StopError struct {
 
 func (s StopError) Error() string { return s.Err.Error() }
 
+func (s StopError) Unwrap() error { return s.Err }
+
 // Retry attempts to call a given function until it succeeds, or returns a
 // StopError value for a certain amount of times. It will delay between calls
 // for any errors based on the provided Method. Retry is concurrent safe and

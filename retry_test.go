@@ -18,6 +18,7 @@ func TestLoopDo(t *testing.T) {
 	t.Run("Panic", testLoopDoPanic)
 	t.Run("Sleep", testLoopDoSleep)
 	t.Run("MultiFunc", testLoopDoMultiFunc)
+	t.Run("ErrorIs", testLoopDoErrorIs)
 }
 
 func testLoopDoReturn(t *testing.T) {
@@ -312,4 +313,18 @@ func testLoopDoMultiFuncNoErrors(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.Equal(t, 2, calls)
+}
+
+func testLoopDoErrorIs(t *testing.T) {
+	t.Parallel()
+	r := &retry.Retry{
+		Attempts: 1,
+	}
+	err := r.Do(func() error {
+		return &retry.StopError{
+			Err: &retry.StopError{Err: assert.AnError},
+		}
+	})
+
+	assert.True(t, errors.Is(err, assert.AnError), err)
 }
