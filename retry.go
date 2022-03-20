@@ -13,6 +13,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"runtime/debug"
 	"time"
 )
 
@@ -82,7 +83,7 @@ func (r Retry) do(fn1 repeatFunc, fns ...repeatFunc) error {
 		func() {
 			defer func() {
 				if e := recover(); e != nil {
-					err = fmt.Errorf("function caused a panic: %v", e)
+					err = fmt.Errorf("function caused a panic: %s\n%s", e, debug.Stack())
 				}
 			}()
 			err = fn()
@@ -108,7 +109,7 @@ func IncrementalDelay(attempt int, delay time.Duration) time.Duration {
 		delay = time.Second
 	}
 	d := int64(delay)
-	// nolint:gosec // the rand package is used for fast ransom number generation.
+	// nolint:gosec // the rand package is used for fast random number generation.
 	jitter := rand.Int63n(d) / 2
 	return (delay * time.Duration(attempt)) + time.Duration(jitter)
 }
