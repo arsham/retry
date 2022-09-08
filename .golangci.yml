@@ -9,7 +9,7 @@ linters-settings:
   gocyclo:
     min-complexity: 15
   gofumpt:
-    lang-version: "1.17"
+    lang-version: "1.18"
   goimports:
     local-prefixes: github.com/golangci/golangci-lint
   goconst:
@@ -25,7 +25,7 @@ linters-settings:
   godot:
     capital: true
   gosimple:
-    go: "1.17"
+    go: "1.18"
     checks: ["all"]
   govet:
     settings:
@@ -74,10 +74,10 @@ linters-settings:
   misspell:
     locale: UK
   staticcheck:
-    go: "1.17"
+    go: "1.18"
     checks: ["all"]
   stylecheck:
-    go: "1.17"
+    go: "1.18"
     checks: ["all"]
   unparam:
     check-exported: true
@@ -109,7 +109,6 @@ linters:
     - bidichk
     - bodyclose
     - cyclop
-    - deadcode
     - depguard
     - dogsled
     - dupl
@@ -143,7 +142,6 @@ linters:
     - rowserrcheck
     - sqlclosecheck
     - staticcheck
-    - structcheck
     - stylecheck
     - tenv
     - tparallel
@@ -151,6 +149,5 @@ linters:
     - unconvert
     - unparam
     - unused
-    - varcheck
     - wastedassign
     - whitespace
