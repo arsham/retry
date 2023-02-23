@@ -1,11 +1,11 @@
 package retry_test
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
-	"github.com/arsham/retry"
-	"github.com/pkg/errors"
+	"github.com/arsham/retry/v2"
 )
 
 func ExampleRetry_Do() {
@@ -79,7 +79,7 @@ func ExampleStopError() {
 		i++
 		fmt.Printf("Running iteration %d.\n", i)
 		if i > 2 {
-			return retry.StopError{}
+			return &retry.StopError{}
 		}
 		return errors.New("ignored error")
 	})

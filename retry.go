@@ -17,10 +17,6 @@ import (
 	"time"
 )
 
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
-
 // DelayMethod determines how the delay behaves. The current attempt is passed
 // on each iteration, with the delay value of the Retry object.
 type DelayMethod func(attempt int, delay time.Duration) time.Duration
@@ -62,15 +58,9 @@ func (r Retry) Do(fn1 repeatFunc, fns ...repeatFunc) error {
 		if err == nil {
 			return nil
 		}
-		var (
-			v1 StopError
-			v2 *StopError
-		)
-		if errors.As(err, &v1) {
-			return v1.Err
-		}
-		if errors.As(err, &v2) {
-			return v2.Err
+		var e *StopError
+		if errors.As(err, &e) {
+			return e.Err
 		}
 		time.Sleep(method(i+1, r.Delay))
 	}
@@ -83,7 +73,12 @@ func (r Retry) do(fn1 repeatFunc, fns ...repeatFunc) error {
 		func() {
 			defer func() {
 				if e := recover(); e != nil {
-					err = fmt.Errorf("function caused a panic: %s\n%s", e, debug.Stack())
+					switch x := e.(type) {
+					case error:
+						err = fmt.Errorf("function caused a panic: %w\n%s", x, debug.Stack())
+					default:
+						err = fmt.Errorf("function caused a panic: %s\n%s", e, debug.Stack())
+					}
 				}
 			}()
 			err = fn()

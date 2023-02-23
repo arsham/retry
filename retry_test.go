@@ -1,13 +1,14 @@
 package retry_test
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/arsham/retry"
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/arsham/retry/v2"
 )
 
 func TestLoopDo(t *testing.T) {
@@ -78,29 +79,6 @@ func testLoopDoZero(t *testing.T) {
 }
 
 func testLoopDoStopping(t *testing.T) {
-	t.Run("WithValue", testLoopDoStoppingValue)
-	t.Run("WithPointer", testLoopDoStoppingPointer)
-}
-
-func testLoopDoStoppingValue(t *testing.T) {
-	t.Parallel()
-	l := &retry.Retry{
-		Attempts: 10,
-	}
-	calls := 0
-	wantErr := errors.New("stop error")
-	err := l.Do(func() error {
-		calls++
-		if calls >= 4 {
-			return retry.StopError{Err: wantErr}
-		}
-		return assert.AnError
-	})
-	assert.Equal(t, 4, calls)
-	assert.Equal(t, err, wantErr)
-}
-
-func testLoopDoStoppingPointer(t *testing.T) {
 	t.Parallel()
 	l := &retry.Retry{
 		Attempts: 10,
@@ -136,7 +114,7 @@ func testLoopDoPanic(t *testing.T) {
 	err = l.Do(func() error {
 		panic(assert.AnError)
 	})
-	assert.Contains(t, errors.Cause(err).Error(), assert.AnError.Error())
+	assert.ErrorIs(t, err, assert.AnError)
 }
 
 func testLoopDoSleep(t *testing.T) {
@@ -162,7 +140,7 @@ func testLoopDoSleepStandardMethod(t *testing.T) {
 	finished := time.Now()
 
 	assert.Equal(t, l.Attempts, count)
-	assert.Equal(t, assert.AnError, errors.Cause(err))
+	assert.ErrorIs(t, err, assert.AnError)
 
 	expected := started.Add(time.Second)
 	assert.WithinDurationf(t, expected, finished, delay,
@@ -196,7 +174,7 @@ func testLoopDoSleepIncrementalMethodUnderSecond(t *testing.T) {
 	expected := started.Add(time.Second)
 
 	assert.Equal(t, l.Attempts, count)
-	assert.Equal(t, assert.AnError, errors.Cause(err))
+	assert.ErrorIs(t, err, assert.AnError)
 	assert.True(t, finished.After(expected),
 		fmt.Sprintf("wanted to take more than %s, took %s", expected.Sub(started), finished.Sub(started)),
 	)
@@ -225,7 +203,7 @@ func testLoopDoSleepIncrementalMethodOverSecond(t *testing.T) {
 	finished := time.Now()
 	expected := started.Add(3 * time.Second)
 
-	assert.Equal(t, assert.AnError, errors.Cause(err))
+	assert.ErrorIs(t, err, assert.AnError)
 	assert.Equal(t, l.Attempts, count)
 
 	assert.True(t, finished.After(expected),
@@ -250,7 +228,7 @@ func testLoopDoSleepIncrementalMethodZero(t *testing.T) {
 		return assert.AnError
 	})
 	finished := time.Now()
-	assert.Equal(t, assert.AnError, errors.Cause(err))
+	assert.ErrorIs(t, err, assert.AnError)
 	assert.Equal(t, l.Attempts, count)
 
 	expected := started.Add(time.Second)
@@ -277,7 +255,7 @@ func testLoopDoMultiFuncFirstErrors(t *testing.T) {
 		t.Error("should not be called")
 		return nil
 	})
-	assert.Equal(t, assert.AnError, errors.Cause(err))
+	assert.ErrorIs(t, err, assert.AnError)
 }
 
 func testLoopDoMultiFuncSecondErrors(t *testing.T) {
@@ -293,7 +271,7 @@ func testLoopDoMultiFuncSecondErrors(t *testing.T) {
 	}, func() error {
 		return assert.AnError
 	})
-	assert.Equal(t, assert.AnError, errors.Cause(err))
+	assert.ErrorIs(t, err, assert.AnError)
 	assert.Equal(t, 3, calls)
 }
 

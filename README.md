@@ -7,19 +7,21 @@
 [![Coverage Status](https://codecov.io/gh/arsham/retry/branch/master/graph/badge.svg)](https://codecov.io/gh/arsham/retry)
 [![Go Report Card](https://goreportcard.com/badge/github.com/arsham/retry)](https://goreportcard.com/report/github.com/arsham/retry)
 
-This library supports `Go >= 1.17`.
+This library supports `Go >= 1.20` by getting `github.com/arsham/retry/v2`
+
+For older Go versions support use the `github.com/arsham/retry` import path!
 
 `Retry` calls your function, and if it errors it calls it again with a delay.
 Eventually it returns the last error or nil if one call is successful.
 
 ```go
 l := &retry.Retry{
-    Attempts: 666,
-    Delay:    time.Millisecond,
+	Attempts: 666,
+	Delay:    time.Millisecond,
 }
 err := l.Do(func() error {
-    // do some work.
-    return nil
+	// do some work.
+	return nil
 })
 ```
 
@@ -37,12 +39,12 @@ If you want to stop retrying you can return a special error:
 
 ```go
 err := l.Do(func() error {
-    if specialCase {
-        return &retry.StopError{
-            Err: errors.New("a special stop"),
-        }
-    }
-    return nil
+	if specialCase {
+		return &retry.StopError{
+			Err: errors.New("a special stop"),
+		}
+	}
+	return nil
 })
 ```
 
@@ -59,17 +61,17 @@ herd](https://en.wikipedia.org/wiki/Thundering_herd_problem).
 
 ```go
 l := &retry.Retry{
-    Attempts: 666,
-    Delay:    10 * time.Millisecond,
-    Method:   retry.IncrementalDelay,
+	Attempts: 666,
+	Delay:    10 * time.Millisecond,
+	Method:   retry.IncrementalDelay,
 }
 err := l.Do(func() error {
-    if specialCase {
-        return &retry.StopError{
-            Err: errors.New("a special stop"),
-        }
-    }
-    return nil
+	if specialCase {
+		return &retry.StopError{
+			Err: errors.New("a special stop"),
+		}
+	}
+	return nil
 })
 ```
 
