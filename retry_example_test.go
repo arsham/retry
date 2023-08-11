@@ -137,6 +137,28 @@ func ExampleIncrementalDelay() {
 	// Error: <nil>
 }
 
+func ExampleIncrementalDelayMax() {
+	// This setup will delay 20ms + 40ms + 50ms + 50ms, and a jitters at 5
+	// attempts, until on the 6th attempt that it would succeed.
+	l := &retry.Retry{
+		Attempts: 6,
+		Delay:    20 * time.Millisecond,
+		Method:   retry.IncrementalDelayMax(50 * time.Millisecond),
+	}
+	i := 0
+	err := l.Do(func() error {
+		i++
+		if i < l.Attempts {
+			return errors.New("ignored error")
+		}
+		return nil
+	})
+	fmt.Println("Error:", err)
+
+	// Output:
+	// Error: <nil>
+}
+
 func ExampleRetry_Do_multipleFuncs() {
 	l := &retry.Retry{
 		Attempts: 4,

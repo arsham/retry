@@ -120,6 +120,7 @@ func testLoopDoPanic(t *testing.T) {
 func testLoopDoSleep(t *testing.T) {
 	t.Run("StandardMethod", testLoopDoSleepStandardMethod)
 	t.Run("IncrementalMethod", testLoopDoSleepIncrementalMethod)
+	t.Run("IncrementalMaxMethod", testLoopDoSleepIncrementalMaxMethod)
 }
 
 func testLoopDoSleepStandardMethod(t *testing.T) {
@@ -179,7 +180,7 @@ func testLoopDoSleepIncrementalMethodUnderSecond(t *testing.T) {
 		fmt.Sprintf("wanted to take more than %s, took %s", expected.Sub(started), finished.Sub(started)),
 	)
 	assert.True(t, finished.Before(expected.Add(6*delay)),
-		fmt.Sprintf("take (%s) more than expected: %s", finished.Sub(started), expected.Add(6*delay)),
+		fmt.Sprintf("took (%s) more than expected: %s", finished.Sub(started), expected.Add(6*delay)),
 	)
 }
 
@@ -210,7 +211,7 @@ func testLoopDoSleepIncrementalMethodOverSecond(t *testing.T) {
 		fmt.Sprintf("wanted to take more than %s, took %s", expected.Sub(started), finished.Sub(started)),
 	)
 	assert.True(t, finished.Before(expected.Add(2*time.Second)),
-		fmt.Sprintf("take (%s) more than expected: %s", finished.Sub(started), 4*time.Second),
+		fmt.Sprintf("took (%s) more than expected: %s", finished.Sub(started), 4*time.Second),
 	)
 }
 
@@ -233,7 +234,98 @@ func testLoopDoSleepIncrementalMethodZero(t *testing.T) {
 
 	expected := started.Add(time.Second)
 	assert.True(t, finished.Before(expected),
-		fmt.Sprintf("take (%s) more than expected: %s", finished.Sub(started), time.Second),
+		fmt.Sprintf("took (%s) more than expected: %s", finished.Sub(started), time.Second),
+	)
+}
+
+func testLoopDoSleepIncrementalMaxMethod(t *testing.T) {
+	t.Run("UnderSecond", testLoopDoSleepIncrementalMaxMethodUnderSecond)
+	t.Run("OverSecond", testLoopDoSleepIncrementalMaxMethodOverTwoSeconds)
+	t.Run("Zero", testLoopDoSleepIncrementalMaxMethodZero)
+}
+
+func testLoopDoSleepIncrementalMaxMethodUnderSecond(t *testing.T) {
+	t.Parallel()
+	// In this setup, the delays would be (almost) 100, 200, 300, 300. So in
+	// almost 900 ms there would be 4 calls. There is a 4*delay amount of
+	// wiggle added.
+	delay := 100 * time.Millisecond
+	l := &retry.Retry{
+		Attempts: 4,
+		Delay:    delay,
+		Method:   retry.IncrementalDelayMax(delay * 3),
+	}
+
+	count := 0
+	started := time.Now()
+	err := l.Do(func() error {
+		count++
+		return assert.AnError
+	})
+	finished := time.Now()
+	expected := started.Add(900 * time.Millisecond)
+
+	assert.Equal(t, l.Attempts, count)
+	assert.ErrorIs(t, err, assert.AnError)
+	assert.True(t, finished.After(expected),
+		fmt.Sprintf("wanted to take more than %s, took %s", expected.Sub(started), finished.Sub(started)),
+	)
+	assert.True(t, finished.Before(expected.Add(6*delay)),
+		fmt.Sprintf("took (%s) more than expected: %s", finished.Sub(started), expected.Add(6*delay)),
+	)
+}
+
+func testLoopDoSleepIncrementalMaxMethodOverTwoSeconds(t *testing.T) {
+	t.Parallel()
+	if testing.Short() {
+		t.Skip("slow test")
+	}
+	l := &retry.Retry{
+		Attempts: 2,
+		Delay:    10 * time.Second,
+		Method:   retry.IncrementalDelayMax(2 * time.Second),
+	}
+
+	count := 0
+	started := time.Now()
+	err := l.Do(func() error {
+		count++
+		return assert.AnError
+	})
+	finished := time.Now()
+	expected := started.Add(4 * time.Second)
+
+	assert.ErrorIs(t, err, assert.AnError)
+	assert.Equal(t, l.Attempts, count)
+
+	assert.True(t, finished.After(expected),
+		fmt.Sprintf("wanted to take more than %s, took %s", expected.Sub(started), finished.Sub(started)),
+	)
+	assert.True(t, finished.Before(expected.Add(2*2*time.Second)),
+		fmt.Sprintf("took (%s) more than expected: %s", finished.Sub(started), 4*time.Second),
+	)
+}
+
+func testLoopDoSleepIncrementalMaxMethodZero(t *testing.T) {
+	t.Parallel()
+	l := &retry.Retry{
+		Attempts: 50,
+		Method:   retry.IncrementalDelayMax(time.Second / 2),
+	}
+
+	count := 0
+	started := time.Now()
+	err := l.Do(func() error {
+		count++
+		return assert.AnError
+	})
+	finished := time.Now()
+	assert.ErrorIs(t, err, assert.AnError)
+	assert.Equal(t, l.Attempts, count)
+
+	expected := started.Add(time.Second)
+	assert.True(t, finished.Before(expected),
+		fmt.Sprintf("took (%s) more than expected: %s", finished.Sub(started), time.Second),
 	)
 }
 

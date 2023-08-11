@@ -7,6 +7,9 @@
 // attempts. You can use the IncrementalDelay method to increment the delays
 // between attempts. It gives a jitter to the delay to prevent Thundering herd
 // problems. If the delay is 0 in either case, it does not sleep between tries.
+// The IncrementalDelay has a maximum delay of 1 second, but if you need a more
+// flexible delay, you can use the IncrementalDelayMax method and give it a max
+// delay.
 package retry
 
 import (
@@ -38,6 +41,7 @@ func (s StopError) Unwrap() error { return s.Err }
 type Retry struct {
 	Method   DelayMethod
 	Delay    time.Duration
+	MaxDelay time.Duration
 	Attempts int
 }
 
@@ -97,14 +101,23 @@ func StandardDelay(_ int, delay time.Duration) time.Duration { return delay }
 // adds a jitter to prevent Thundering herd. If the delay is 0, it always
 // returns 0.
 func IncrementalDelay(attempt int, delay time.Duration) time.Duration {
-	if delay == 0 {
-		return 0
+	return IncrementalDelayMax(time.Second)(attempt, delay)
+}
+
+// IncrementalDelayMax returns a DelayMethod that increases the delay between
+// attempts up to the given max duration. It adds a jitter to prevent
+// Thundering herd. If the delay is 0, it always returns 0.
+func IncrementalDelayMax(max time.Duration) func(int, time.Duration) time.Duration {
+	return func(attempt int, delay time.Duration) time.Duration {
+		if delay == 0 {
+			return 0
+		}
+		if delay > max {
+			delay = max
+		}
+		d := int64(delay)
+		// nolint:gosec // the rand package is used for fast random number generation.
+		jitter := rand.Int63n(d) / 2
+		return (delay * time.Duration(attempt)) + time.Duration(jitter)
 	}
-	if delay > time.Second {
-		delay = time.Second
-	}
-	d := int64(delay)
-	// nolint:gosec // the rand package is used for fast random number generation.
-	jitter := rand.Int63n(d) / 2
-	return (delay * time.Duration(attempt)) + time.Duration(jitter)
 }
