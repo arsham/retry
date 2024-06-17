@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/arsham/retry/v2"
+	"github.com/arsham/retry/v3"
 )
 
 func ExampleRetry_Do() {
-	l := &retry.Retry{
+	r := &retry.Retry{
 		Attempts: 4,
 	}
-	err := l.Do(func() error {
+	err := r.Do(func() error {
 		return nil
 	})
 	fmt.Println("Error:", err)
@@ -22,8 +22,8 @@ func ExampleRetry_Do() {
 }
 
 func ExampleRetry_Do_zero() {
-	l := &retry.Retry{}
-	err := l.Do(func() error {
+	r := &retry.Retry{}
+	err := r.Do(func() error {
 		fmt.Println("this should not happen")
 		return nil
 	})
@@ -34,11 +34,11 @@ func ExampleRetry_Do_zero() {
 }
 
 func ExampleRetry_Do_error() {
-	l := &retry.Retry{
+	r := &retry.Retry{
 		Attempts: 4,
 		Delay:    time.Nanosecond,
 	}
-	err := l.Do(func() error {
+	err := r.Do(func() error {
 		return errors.New("some error")
 	})
 	fmt.Println("Error:", err)
@@ -48,12 +48,12 @@ func ExampleRetry_Do_error() {
 }
 
 func ExampleRetry_Do_standardMethod() {
-	l := &retry.Retry{
+	r := &retry.Retry{
 		Attempts: 4,
 		Delay:    time.Nanosecond,
 	}
 	i := 0
-	err := l.Do(func() error {
+	err := r.Do(func() error {
 		i++
 		fmt.Printf("Running iteration %d.\n", i)
 		if i < 3 {
@@ -71,11 +71,11 @@ func ExampleRetry_Do_standardMethod() {
 }
 
 func ExampleStopError() {
-	l := &retry.Retry{
+	r := &retry.Retry{
 		Attempts: 10,
 	}
 	i := 0
-	err := l.Do(func() error {
+	err := r.Do(func() error {
 		i++
 		fmt.Printf("Running iteration %d.\n", i)
 		if i > 2 {
@@ -93,14 +93,14 @@ func ExampleStopError() {
 }
 
 func ExampleStopError_stopErr() {
-	l := &retry.Retry{
+	r := &retry.Retry{
 		Attempts: 10,
 	}
 	i := 0
 	stopErr := &retry.StopError{
 		Err: errors.New("this is the returned error"),
 	}
-	err := l.Do(func() error {
+	err := r.Do(func() error {
 		i++
 		if i > 2 {
 			return stopErr
@@ -118,15 +118,15 @@ func ExampleStopError_stopErr() {
 func ExampleIncrementalDelay() {
 	// This setup will delay 20ms + 40ms + 80ms + 160ms, and a jitters at 5
 	// attempts, until on the 6th attempt that it would succeed.
-	l := &retry.Retry{
+	r := &retry.Retry{
 		Attempts: 6,
 		Delay:    20 * time.Millisecond,
 		Method:   retry.IncrementalDelay,
 	}
 	i := 0
-	err := l.Do(func() error {
+	err := r.Do(func() error {
 		i++
-		if i < l.Attempts {
+		if i < r.Attempts {
 			return errors.New("ignored error")
 		}
 		return nil
@@ -140,15 +140,15 @@ func ExampleIncrementalDelay() {
 func ExampleIncrementalDelayMax() {
 	// This setup will delay 20ms + 40ms + 50ms + 50ms, and a jitters at 5
 	// attempts, until on the 6th attempt that it would succeed.
-	l := &retry.Retry{
+	r := &retry.Retry{
 		Attempts: 6,
 		Delay:    20 * time.Millisecond,
 		Method:   retry.IncrementalDelayMax(50 * time.Millisecond),
 	}
 	i := 0
-	err := l.Do(func() error {
+	err := r.Do(func() error {
 		i++
-		if i < l.Attempts {
+		if i < r.Attempts {
 			return errors.New("ignored error")
 		}
 		return nil
@@ -160,11 +160,11 @@ func ExampleIncrementalDelayMax() {
 }
 
 func ExampleRetry_Do_multipleFuncs() {
-	l := &retry.Retry{
+	r := &retry.Retry{
 		Attempts: 4,
 		Delay:    time.Nanosecond,
 	}
-	err := l.Do(func() error {
+	err := r.Do(func() error {
 		fmt.Println("Running func 1.")
 		return nil
 	}, func() error {

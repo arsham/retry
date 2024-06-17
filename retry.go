@@ -57,7 +57,7 @@ func (r Retry) Do(fn1 repeatFunc, fns ...repeatFunc) error {
 		method = StandardDelay
 	}
 	var err error
-	for i := 0; i < r.Attempts; i++ {
+	for i := range r.Attempts {
 		err = r.do(fn1, fns...)
 		if err == nil {
 			return nil
@@ -68,8 +68,11 @@ func (r Retry) Do(fn1 repeatFunc, fns ...repeatFunc) error {
 		}
 		time.Sleep(method(i+1, r.Delay))
 	}
+
 	return err
 }
+
+var errPanic = errors.New("function caused a panic")
 
 func (r Retry) do(fn1 repeatFunc, fns ...repeatFunc) error {
 	var err error
@@ -79,9 +82,9 @@ func (r Retry) do(fn1 repeatFunc, fns ...repeatFunc) error {
 				if e := recover(); e != nil {
 					switch x := e.(type) {
 					case error:
-						err = fmt.Errorf("function caused a panic: %w\n%s", x, debug.Stack())
+						err = fmt.Errorf("%w: %w\n%s", errPanic, x, debug.Stack())
 					default:
-						err = fmt.Errorf("function caused a panic: %s\n%s", e, debug.Stack())
+						err = fmt.Errorf("%w: %s\n%s", errPanic, e, debug.Stack())
 					}
 				}
 			}()
@@ -91,6 +94,7 @@ func (r Retry) do(fn1 repeatFunc, fns ...repeatFunc) error {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -105,19 +109,20 @@ func IncrementalDelay(attempt int, delay time.Duration) time.Duration {
 }
 
 // IncrementalDelayMax returns a DelayMethod that increases the delay between
-// attempts up to the given max duration. It adds a jitter to prevent
+// attempts up to the given maximum duration. It adds a jitter to prevent
 // Thundering herd. If the delay is 0, it always returns 0.
-func IncrementalDelayMax(max time.Duration) func(int, time.Duration) time.Duration {
+func IncrementalDelayMax(maximum time.Duration) func(int, time.Duration) time.Duration {
 	return func(attempt int, delay time.Duration) time.Duration {
 		if delay == 0 {
 			return 0
 		}
-		if delay > max {
-			delay = max
+		if delay > maximum {
+			delay = maximum
 		}
 		d := int64(delay)
-		// nolint:gosec // the rand package is used for fast random number generation.
+		//nolint:gosec // the rand package is used for fast random number generation.
 		jitter := rand.Int63n(d) / 2
+
 		return (delay * time.Duration(attempt)) + time.Duration(jitter)
 	}
 }
