@@ -1,12 +1,32 @@
 package retry_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"time"
 
 	"github.com/arsham/retry/v3"
 )
+
+func ExampleRetry_DoContext() {
+	r := &retry.Retry{
+		Attempts: 4,
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	err := r.DoContext(ctx, func() error {
+		// we cancel early to prove a point.
+		cancel()
+		return nil
+	}, func() error {
+		panic("should not have been called")
+	})
+	fmt.Println("Error:", err)
+
+	// Output:
+	// Error: context canceled
+}
 
 func ExampleRetry_Do() {
 	r := &retry.Retry{

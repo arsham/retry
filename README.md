@@ -8,9 +8,8 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/arsham/retry)](https://goreportcard.com/report/github.com/arsham/retry)
 
 This library supports `Go >= 1.22` by getting `github.com/arsham/retry/v3`. For
-older versions (`Go >= 1.20`) import `github.com/arsham/retry/v2`.
-
-For older Go versions support use the `github.com/arsham/retry` import path!
+older versions (`Go >= 1.20`) import `github.com/arsham/retry/v2`, or older Go
+versions import `github.com/arsham/retry`.
 
 `Retry` calls your function, and if it errors it calls it again with a delay.
 Eventually it returns the last error or nil if one call is successful.
@@ -34,6 +33,15 @@ err := r.Do(func() error {
 }, func() error {
     return nil
 }}
+```
+
+You can use the `DoContext` and pass a context object to stop when the context
+is cancelled:
+
+```go
+err := r.DoContext(ctx, func() error {
+	return nil
+})
 ```
 
 If you want to stop retrying you can return a special error:

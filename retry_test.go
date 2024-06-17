@@ -1,6 +1,7 @@
 package retry_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -10,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestRetryDo(t *testing.T) {
+func TestRetry_Do(t *testing.T) {
 	t.Parallel()
 	t.Run("Return", testRetryDoReturn)
 	t.Run("Zero", testRetryDoZero)
@@ -100,19 +101,30 @@ func testRetryDoPanic(t *testing.T) {
 		Attempts: 3,
 	}
 	calls := -1
-	err := l.Do(func() error {
-		calls++
-		if calls < l.Attempts-1 {
-			panic(assert.AnError)
-		}
-		return nil
+	require.NotPanics(t, func() {
+		err := l.Do(func() error {
+			calls++
+			if calls < l.Attempts-1 {
+				panic(assert.AnError)
+			}
+			return nil
+		})
+		require.NoError(t, err)
 	})
-	require.NoError(t, err)
 
-	err = l.Do(func() error {
-		panic(assert.AnError)
+	require.NotPanics(t, func() {
+		err := l.Do(func() error {
+			panic(assert.AnError)
+		})
+		require.ErrorIs(t, err, assert.AnError)
 	})
-	assert.ErrorIs(t, err, assert.AnError)
+
+	require.NotPanics(t, func() {
+		err := l.Do(func() error {
+			panic(assert.AnError.Error())
+		})
+		require.Error(t, err)
+	})
 }
 
 func testRetryDoSleep(t *testing.T) {
@@ -395,4 +407,42 @@ func testRetryDoErrorIs(t *testing.T) {
 	})
 
 	assert.ErrorIs(t, err, assert.AnError, err)
+}
+
+func TestRetry_DoContext(t *testing.T) {
+	t.Parallel()
+	// Since the Do() uses the DoContext() method internally, there is no point
+	// duplicating the effort. We just test some cases.
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	r := &retry.Retry{
+		Attempts: 100,
+		Delay:    time.Millisecond,
+	}
+	calls := 0
+	err := r.DoContext(ctx, func() error {
+		calls++
+		if calls < 3 {
+			return assert.AnError
+		}
+		return nil
+	}, func() error {
+		if calls > 5 {
+			cancel()
+		}
+		return assert.AnError
+	})
+
+	assert.Equal(t, 6, calls)
+	require.ErrorIs(t, err, context.Canceled, err)
+
+	err = r.DoContext(ctx, func() error {
+		cancel()
+		return nil
+	}, func() error {
+		panic("should not happen")
+	})
+
+	assert.ErrorIs(t, err, context.Canceled, err)
 }

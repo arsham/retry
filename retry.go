@@ -13,6 +13,7 @@
 package retry
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -48,17 +49,34 @@ type Retry struct {
 type repeatFunc func() error
 
 // Do calls fn until it returns nil or a StopError. It delays and retries if
-// the fn returns any errors or panics. The value fo the returned error, or the
+// the fn returns any errors or panics. The value of the returned error, or the
 // Err of a StopError, or an error with the panic message will be returned at
 // the last cycle.
 func (r Retry) Do(fn1 repeatFunc, fns ...repeatFunc) error {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	return r.DoContext(ctx, fn1, fns...)
+}
+
+// DoContext calls fn until it returns nil or a StopError. It delays and
+// retries if the fn returns any errors or panics. If the context is cancelled,
+// it will stop iterating and returns the error reported by ctx.Err() method.
+// The value of the returned error, or the Err of a StopError, or an error with
+// the panic message will be returned at the last cycle.
+func (r Retry) DoContext(ctx context.Context, fn1 repeatFunc, fns ...repeatFunc) error {
 	method := r.Method
 	if method == nil {
 		method = StandardDelay
 	}
 	var err error
 	for i := range r.Attempts {
-		err = r.do(fn1, fns...)
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+		err = r.do(ctx, fn1, fns...)
 		if err == nil {
 			return nil
 		}
@@ -74,9 +92,14 @@ func (r Retry) Do(fn1 repeatFunc, fns ...repeatFunc) error {
 
 var errPanic = errors.New("function caused a panic")
 
-func (r Retry) do(fn1 repeatFunc, fns ...repeatFunc) error {
+func (r Retry) do(ctx context.Context, fn1 repeatFunc, fns ...repeatFunc) error {
 	var err error
 	for _, fn := range append([]repeatFunc{fn1}, fns...) {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
 		func() {
 			defer func() {
 				if e := recover(); e != nil {
