@@ -18,7 +18,7 @@ unit_test_watch: ## Run unit tests in watch mode. You can set: [run, timeout, sh
 	@reflex -d none -r "(\.go$$)|(go.mod)|(\.sql$$)" -- zsh -c "go mod tidy; go test -trimpath --timeout=$(timeout) $(short) $(dir) -run $(run) $(flags); repeat 100 printf '#'"
 
 .PHONY: lint
-lint: ## list the code
+lint: ## Lint the code.
 	go fmt ./...
 	go vet ./...
 	golangci-lint run ./...
@@ -28,14 +28,12 @@ ci_tests: ## Run tests for CI.
 	go test -trimpath --timeout=10m -failfast -v -tags=integration -race -covermode=atomic -coverprofile=coverage.out ./...
 
 .PHONY: dependencies
-dependencies: ## Install dependencies requried for development operations.
+dependencies: ## Install dependencies required for development operations.
 	@go install github.com/cespare/reflex@latest
-	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	@go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
 	@go install github.com/psampaz/go-mod-outdated@latest
 	@go install github.com/jondot/goweight@latest
-	@go get -t -u golang.org/x/tools/cmd/cover
-	@go get -t -u github.com/sonatype-nexus-community/nancy@latest
-	@go get -u ./...
+	@go install golang.org/x/vuln/cmd/govulncheck@latest
 	@go mod tidy
 
 .PHONY: clean
@@ -52,5 +50,5 @@ coverage: ## Show the test coverage on browser.
 .PHONY: audit
 audit: ## Audit the code for updates, vulnerabilities and binary weight.
 	go list -u -m -json all | go-mod-outdated -update -direct
-	go list -json -m all | nancy sleuth
+	govulncheck ./...
 	goweight | head -n 20

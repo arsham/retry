@@ -2,7 +2,6 @@ package retry_test
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -187,10 +186,10 @@ func testRetryDoSleepIncrementalMethodUnderSecond(t *testing.T) {
 	assert.Equal(t, l.Attempts, count)
 	require.ErrorIs(t, err, assert.AnError)
 	assert.True(t, finished.After(expected),
-		fmt.Sprintf("wanted to take more than %s, took %s", expected.Sub(started), finished.Sub(started)),
+		"wanted to take more than %s, took %s", expected.Sub(started), finished.Sub(started),
 	)
 	assert.True(t, finished.Before(expected.Add(6*delay)),
-		fmt.Sprintf("took (%s) more than expected: %s", finished.Sub(started), expected.Add(6*delay)),
+		"took (%s) more than expected: %s", finished.Sub(started), expected.Add(6*delay),
 	)
 }
 
@@ -218,10 +217,10 @@ func testRetryDoSleepIncrementalMethodOverSecond(t *testing.T) {
 	assert.Equal(t, rty.Attempts, count)
 
 	assert.True(t, finished.After(expected),
-		fmt.Sprintf("wanted to take more than %s, took %s", expected.Sub(started), finished.Sub(started)),
+		"wanted to take more than %s, took %s", expected.Sub(started), finished.Sub(started),
 	)
 	assert.True(t, finished.Before(expected.Add(2*time.Second)),
-		fmt.Sprintf("took (%s) more than expected: %s", finished.Sub(started), 4*time.Second),
+		"took (%s) more than expected: %s", finished.Sub(started), 4*time.Second,
 	)
 }
 
@@ -244,7 +243,7 @@ func testRetryDoSleepIncrementalMethodZero(t *testing.T) {
 
 	expected := started.Add(time.Second)
 	assert.True(t, finished.Before(expected),
-		fmt.Sprintf("took (%s) more than expected: %s", finished.Sub(started), time.Second),
+		"took (%s) more than expected: %s", finished.Sub(started), time.Second,
 	)
 }
 
@@ -278,10 +277,10 @@ func testRetryDoSleepIncrementalMaxMethodUnderSecond(t *testing.T) {
 	assert.Equal(t, rty.Attempts, count)
 	require.ErrorIs(t, err, assert.AnError)
 	assert.True(t, finished.After(expected),
-		fmt.Sprintf("wanted to take more than %s, took %s", expected.Sub(started), finished.Sub(started)),
+		"wanted to take more than %s, took %s", expected.Sub(started), finished.Sub(started),
 	)
 	assert.True(t, finished.Before(expected.Add(6*delay)),
-		fmt.Sprintf("took (%s) more than expected: %s", finished.Sub(started), expected.Add(6*delay)),
+		"took (%s) more than expected: %s", finished.Sub(started), expected.Add(6*delay),
 	)
 }
 
@@ -309,10 +308,10 @@ func testRetryDoSleepIncrementalMaxMethodOverTwoSeconds(t *testing.T) {
 	assert.Equal(t, l.Attempts, count)
 
 	assert.True(t, finished.After(expected),
-		fmt.Sprintf("wanted to take more than %s, took %s", expected.Sub(started), finished.Sub(started)),
+		"wanted to take more than %s, took %s", expected.Sub(started), finished.Sub(started),
 	)
 	assert.True(t, finished.Before(expected.Add(2*2*time.Second)),
-		fmt.Sprintf("took (%s) more than expected: %s", finished.Sub(started), 4*time.Second),
+		"took (%s) more than expected: %s", finished.Sub(started), 4*time.Second,
 	)
 }
 
@@ -335,7 +334,7 @@ func testRetryDoSleepIncrementalMaxMethodZero(t *testing.T) {
 
 	expected := started.Add(time.Second)
 	assert.True(t, finished.Before(expected),
-		fmt.Sprintf("took (%s) more than expected: %s", finished.Sub(started), time.Second),
+		"took (%s) more than expected: %s", finished.Sub(started), time.Second,
 	)
 }
 

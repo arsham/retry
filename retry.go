@@ -16,7 +16,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math/rand"
+	"math/rand/v2"
 	"runtime/debug"
 	"time"
 )
@@ -144,7 +144,7 @@ func IncrementalDelayMax(maximum time.Duration) func(int, time.Duration) time.Du
 		}
 		d := int64(delay)
 		//nolint:gosec // the rand package is used for fast random number generation.
-		jitter := rand.Int63n(d) / 2
+		jitter := rand.Int64N(d) / 2
 
 		return (delay * time.Duration(attempt)) + time.Duration(jitter)
 	}
